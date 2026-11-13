@@ -135,7 +135,7 @@ class GreetingListener(ABCCog, name="Greeting Event"):
 
         action = self.session.exec(
             select(models.Action).where(
-                models.Action.name == "welcome" and models.Action.cog_id == cog.id
+                models.Action.name == "goodbye" and models.Action.cog_id == cog.id
             )
         ).one()
 
