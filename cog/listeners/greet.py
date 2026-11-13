@@ -43,19 +43,19 @@ class GreetingListener(ABCCog, name="Greeting Event"):
         if not greeting:
             return
 
-        if greeting.welcome_trig.split("|")[0] != "on_member_join":
+        if greeting.trigger.split("|")[0] != "on_member_join":
             self.new_members.append(member)
             return
 
-        msg = greeting.welcome_msg.replace("{member.mention}", member.mention)
+        msg = greeting.msg.replace("{member.mention}", member.mention)
         embed = (
             self.json_to_embed(
-                greeting.welcome_embed.replace("{member.mention}", member.mention)
+                greeting.embed.replace("{member.mention}", member.mention)
             )
-            if greeting.welcome_embed is not None
+            if greeting.embed is not None
             else None
         )
-        ch = member.guild.get_channel(greeting.welcome_ch)
+        ch = member.guild.get_channel(greeting.channel)
 
         await ch.send(msg, embed=embed)
 
@@ -83,7 +83,7 @@ class GreetingListener(ABCCog, name="Greeting Event"):
         if not greeting:
             return
 
-        trig_split = greeting.welcome_trig.split("|")
+        trig_split = greeting.trigger.split("|")
         trigger = trig_split[0]
         trig_role = int(trig_split[1])
 
@@ -112,14 +112,14 @@ class GreetingListener(ABCCog, name="Greeting Event"):
 
         self.new_members.remove(member)
 
-        ch = member.guild.get_channel(greeting.welcome_ch)
+        ch = member.guild.get_channel(greeting.channel)
         if isinstance(ch, TextChannel):
-            msg = greeting.welcome_msg.replace("{member.mention}", member.mention)
+            msg = greeting.msg.replace("{member.mention}", member.mention)
             embed = (
                 self.json_to_embed(
-                    greeting.welcome_embed.replace("{member.mention}", member.mention)
+                    greeting.embed.replace("{member.mention}", member.mention)
                 )
-                if greeting.welcome_embed is not None
+                if greeting.embed is not None
                 else None
             )
 
@@ -127,10 +127,38 @@ class GreetingListener(ABCCog, name="Greeting Event"):
 
     @Cog.listener()
     async def on_member_remove(self, member: Member):
-        channel = self.bot.get_channel(1563706475833204827)
+        guild = self.session.get(models.Guild, member.guild.id)
+
+        cog = self.session.exec(
+            select(models.Cog).where(models.Cog.name == "Greeting")
+        ).one()
+
+        action = self.session.exec(
+            select(models.Action).where(
+                models.Action.name == "welcome" and models.Action.cog_id == cog.id
+            )
+        ).one()
+
+        greeting = self.session.exec(
+            select(models.ActionGreeting).where(
+                models.ActionGreeting.action_id == action.id,
+                models.ActionGreeting.guild_id == guild.id,
+            )
+        ).one_or_none()
+
+        channel = member.guild.get_channel(greeting.channel)
 
         if isinstance(channel, TextChannel):
-            await channel.send(f"Wow umalis. Kapal ng mukha {member.mention}!!")
+            msg = greeting.msg.replace("{member.mention}", member.mention)
+            embed = (
+                self.json_to_embed(
+                    greeting.embed.replace("{member.mention}", member.mention)
+                )
+                if greeting.embed is not None
+                else None
+            )
+
+            await channel.send(msg, embed=embed)
 
     def json_to_embed(self, string: str):
         """Convert a json string to a discord embed

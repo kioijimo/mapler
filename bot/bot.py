@@ -6,6 +6,8 @@ from discord import Activity, ActivityType, Colour, Intents
 from discord.ext.commands import Bot
 from sqlmodel import Session
 
+from service.db import models
+
 
 class Mapler(Bot):
     def __init__(self, session: Session):
@@ -28,10 +30,25 @@ class Mapler(Bot):
     def setup_log(self):
         logging.basicConfig(filename="mapler.log", level=logging.INFO)
 
+    def setup_db(self):
+        self.session.add(models.Guild(id=1563694659484520468, name="sunnyside maple"))
+        self.session.add(
+            models.Cog(
+                name="Greeting Event",
+                description="Everything greeting-related events of me!",
+            )
+        )
+        self.session.add(
+            models.Cog(
+                name="Greeting",
+                description="Everything greeting-related commands of me!",
+            )
+        )
+
     async def on_connect(self):
         self.setup_log()
 
-        # self.session.add(models.Guild(id=1563694659484520468, name="sunnyside maple"))
+        self.setup_db()
 
         await self.load_cogs()
 
