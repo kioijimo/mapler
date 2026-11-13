@@ -90,18 +90,21 @@ class GreetingListener(ABCCog, name="Greeting Event"):
         if trigger != "on_member_update":
             return
 
-        found = filter(
-            lambda m: (
-                m.id == member.id
-                and next(
-                    filter(
-                        lambda role: role.id == trig_role,
-                        reversed(member.roles),
-                    ),
-                    False,
-                )
+        found = next(
+            filter(
+                lambda m: (
+                    m.id == member.id
+                    and next(
+                        filter(
+                            lambda role: role.id == trig_role,
+                            reversed(member.roles),
+                        ),
+                        False,
+                    )
+                ),
+                self.new_members,
             ),
-            self.new_members,
+            False,
         )
 
         if not found:

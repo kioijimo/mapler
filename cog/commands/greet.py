@@ -39,10 +39,9 @@ class Greeting(ABCCog, name="Greeting"):
 
         await ctx.reply("Successfully registered welcome action!", ephemeral=True)
 
-    @welcome.group(
+    @welcome.command(
         name="message",
         description="Set my welcome message whenever a user joins.",
-        with_app_command=True,
     )
     @describe(
         message="A text welcome message.",
@@ -94,10 +93,9 @@ class Greeting(ABCCog, name="Greeting"):
 
         await ctx.reply("Successfully configured welcome message!", ephemeral=True)
 
-    @welcome.group(
+    @welcome.command(
         name="channel",
         description="Set the channel where welcome messages will be sent.",
-        with_app_command=True,
     )
     @describe(
         channel="Text channel to send the welcome message to. Defaults to the channel the command is invoked in.",
@@ -142,52 +140,9 @@ class Greeting(ABCCog, name="Greeting"):
             "Successfully configured welcome message channel!", ephemeral=True
         )
 
-    @welcome.group(
-        name="role",
-        description="Set the role to give when a member joins.",
-        with_app_command=True,
-    )
-    @describe(
-        role="Role to give a member when they join.",
-    )
-    async def welcome_role(self, ctx: Context, role: Role):
-        await ctx.defer()
-        cog = self.session.exec(
-            select(models.Cog).where(models.Cog.name == ctx.command.cog_name)
-        ).one()
-
-        action = self.session.exec(
-            select(models.Action).where(
-                models.Action.name == ctx.command.root_parent.name
-                and models.Action.cog_id == cog.id
-            )
-        ).one()
-
-        greeting = self.session.exec(
-            select(models.ActionGreeting).where(
-                models.ActionGreeting.action_id == action.id,
-                models.ActionGreeting.guild_id == ctx.guild.id,
-            )
-        ).one_or_none()
-
-        if greeting:
-            greeting.welcome_role = role.id or greeting.welcome_role
-        else:
-            greeting = models.ActionGreeting(
-                action_id=action.id,
-                guild_id=ctx.guild.id,
-                welcome_role=role.id,
-            )
-
-        self.session.add(greeting)
-        self.session.commit()
-
-        await ctx.reply("Successfully configured welcome role!", ephemeral=True)
-
-    @welcome.group(
+    @welcome.command(
         name="trigger",
         description="Set the trigger to invoke the welcome greeting.",
-        with_app_command=True,
     )
     @describe(
         trigger="Trigger event that invokes the greeting. Defaults to when a member joins.",
