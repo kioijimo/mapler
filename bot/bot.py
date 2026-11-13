@@ -48,7 +48,7 @@ class Mapler(Bot):
     async def on_connect(self):
         self.setup_log()
 
-        self.setup_db()
+        # self.setup_db()
 
         await self.load_cogs()
 
